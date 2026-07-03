@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KORA — 城市探索向导</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#08050f;color:#f0ede6;overflow-x:hidden}
+
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+.wrap{position:relative;z-index:1}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.2rem 2.5rem;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
+.nav-logo{font-size:1rem;font-weight:700;letter-spacing:0.08em;color:#fff}
+.nav-logo span{color:#ff6b35}
+.nav-cta{font-size:0.8rem;font-weight:600;color:#ff6b35;text-decoration:none;border:1px solid rgba(255,107,53,0.5);padding:8px 18px;border-radius:100px;transition:all 0.2s}
+.nav-cta:hover{background:rgba(255,107,53,0.15)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8rem 2rem 5rem;text-align:center;position:relative}
+
+.hero-eyebrow{font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:#ff6b35;margin-bottom:2rem;opacity:0;animation:fadeUp 0.8s 0.2s forwards}
+
+.hero-title{font-size:clamp(3rem,8vw,6.5rem);font-weight:800;line-height:1.0;letter-spacing:-0.03em;margin-bottom:1.5rem;opacity:0;animation:fadeUp 0.8s 0.4s forwards}
+.hero-title .line2{display:block;background:linear-gradient(135deg,#ff6b35 0%,#ff3366 50%,#ff6b35 100%);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite}
+
+.hero-dash{display:inline-block;color:#333;margin:0 0.3em;-webkit-text-fill-color:#333}
+
+.hero-sub{font-size:1.05rem;color:#666;max-width:420px;margin:0 auto 1rem;line-height:1.8;opacity:0;animation:fadeUp 0.8s 0.6s forwards}
+
+.hero-sub2{font-size:0.9rem;color:#ff6b35;opacity:0;animation:fadeUp 0.8s 0.7s forwards;margin-bottom:3rem}
+
+.meme-wrap{margin:0 auto 3rem;max-width:320px;opacity:0;animation:fadeUp 0.8s 0.8s forwards}
+.meme{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:12px;padding:1rem;font-size:0.85rem;text-align:left;position:relative}
+.meme-top{color:#888;margin-bottom:0.5rem;font-size:0.75rem}
+.meme-msg{color:#f0ede6;line-height:1.6}
+.meme-msg .highlight{color:#ff6b35;font-weight:600}
+.meme-reaction{margin-top:0.75rem;font-size:0.75rem;color:#555}
+
+.hero-btns{display:flex;flex-direction:column;align-items:center;gap:0.75rem;opacity:0;animation:fadeUp 0.8s 1s forwards}
+.btn-primary{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#ff6b35,#ff3366);color:#fff;font-size:0.95rem;font-weight:700;padding:16px 36px;border-radius:100px;text-decoration:none;transition:transform 0.2s,opacity 0.2s;box-shadow:0 0 40px rgba(255,107,53,0.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 60px rgba(255,107,53,0.5)}
+.btn-hint{font-size:0.75rem;color:#444}
+
+/* SCROLL INDICATOR */
+.scroll-ind{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp 0.8s 1.4s forwards}
+.scroll-ind span{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#333}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,#ff6b35,transparent)}
+
+/* SECTIONS */
+.section{padding:6rem 2rem;max-width:1000px;margin:0 auto}
+.section-eyebrow{font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:#ff6b35;margin-bottom:1rem}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:1rem;line-height:1.15}
+.section-sub{font-size:0.95rem;color:#555;max-width:480px;line-height:1.8;margin-bottom:3.5rem}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.25rem}
+.feat{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:1.75rem;position:relative;overflow:hidden;transition:transform 0.3s,background 0.3s}
+.feat:hover{transform:translateY(-4px);background:rgba(255,255,255,0.07)}
+.feat::before{content:'';position:absolute;inset:0;border-radius:16px;padding:1px;background:linear-gradient(135deg,#ff6b35,#b44fff,#00e5ff);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.feat-num{font-size:0.75rem;letter-spacing:0.15em;margin-bottom:1rem;font-weight:800;background:linear-gradient(135deg,#ff6b35,#b44fff,#00e5ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.feat h3{font-size:1rem;font-weight:700;margin-bottom:0.5rem}
+.feat p{font-size:0.85rem;color:#555;line-height:1.7}
+
+/* WHY */
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#1a1a1a;border:1px solid #1a1228;border-radius:16px;overflow:hidden}
+@media(max-width:580px){.why-grid{grid-template-columns:1fr}}
+.why-item{background:rgba(255,255,255,0.03);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:2rem;transition:transform 0.3s,background 0.3s;position:relative;overflow:hidden;min-height:180px}
+.why-item:hover{transform:translateY(-3px);background:rgba(255,255,255,0.06)}
+.why-bg-num{position:absolute;bottom:-0.5rem;right:0.5rem;font-size:6rem;font-weight:900;line-height:1;background:linear-gradient(135deg,rgba(255,107,53,0.15),rgba(180,68,255,0.12),rgba(0,229,255,0.1));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;pointer-events:none;user-select:none}
+.why-label{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:#ff6b35;margin-bottom:0.75rem;position:relative;z-index:1}
+.why-item h4{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;position:relative;z-index:1}
+.why-item p{font-size:0.85rem;color:#666;line-height:1.7;position:relative;z-index:1}
+
+/* HOW */
+.steps{display:flex;flex-direction:column;gap:0;max-width:480px;position:relative}
+.steps::before{content:'';position:absolute;left:19px;top:20px;bottom:20px;width:2px;background:linear-gradient(to bottom,#ff6b35,#b44fff,#00e5ff);border-radius:2px}
+.step{display:flex;align-items:flex-start;gap:1.5rem;padding:1.5rem;margin-bottom:1rem;position:relative;background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.06);border-radius:14px}
+.step:last-child{margin-bottom:0}
+.step:hover .step-num{transform:scale(1.1)}
+.step-num{width:40px;height:40px;background:linear-gradient(135deg,#ff6b35,#b44fff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:#fff;flex-shrink:0;position:relative;z-index:1;transition:transform 0.2s;box-shadow:0 0 16px rgba(255,107,53,0.3)}
+.step h4{font-size:1rem;font-weight:700;margin-bottom:0.4rem;margin-top:0.5rem}
+.step p{font-size:0.85rem;color:#555;line-height:1.6}
+
+/* FAQ */
+.faq{max-width:600px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);position:relative}.faq::before{content:'';position:absolute;inset:0;border-radius:16px;padding:1px;background:linear-gradient(135deg,#ff6b35,#b44fff,#00e5ff);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.faq-item{padding:1.5rem 2rem;border-bottom:1px solid #1a1a1a;cursor:pointer;transition:background 0.2s}
+.faq-item:last-child{border-bottom:none}
+.faq-item:hover{background:rgba(255,255,255,0.05)}
+.faq-q{font-size:0.9rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.faq-q .arrow{color:#ff6b35;font-size:1rem;transition:transform 0.3s;flex-shrink:0}
+.faq-a{font-size:0.85rem;color:#555;line-height:1.7;margin-top:0.75rem;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .arrow{transform:rotate(45deg)}
+
+/* FINAL */
+.final{text-align:center;padding:8rem 2rem;position:relative;overflow:hidden}
+.final::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,107,53,0.08) 0%,transparent 60%);pointer-events:none}
+.final h2{font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:1rem;line-height:1.1}
+.final p{color:#555;margin-bottom:3rem;font-size:0.95rem}
+
+/* DIVIDER */
+.div{border:none;border-top:1px solid #111;margin:0}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 0.7s,transform 0.7s}
+.reveal.visible{opacity:1;transform:none}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap');
+
+.aurora{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden}
+.aurora-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0;animation:auroraFloat 12s ease-in-out infinite}
+.aurora-blob:nth-child(1){width:700px;height:500px;background:rgba(180,68,255,0.14);top:-15%;left:-10%;animation-delay:0s;animation-duration:16.2s}
+.aurora-blob:nth-child(2){width:600px;height:450px;background:rgba(255,107,53,0.115);top:15%;right:-15%;animation-delay:2s;animation-duration:19.44s}
+.aurora-blob:nth-child(3){width:800px;height:400px;background:rgba(0,229,255,0.094);bottom:5%;left:10%;animation-delay:5s;animation-duration:22.68s}
+.aurora-blob:nth-child(4){width:500px;height:500px;background:rgba(0,255,136,0.085);top:40%;left:35%;animation-delay:7s;animation-duration:17.82s}
+@keyframes auroraFloat{
+  0%{opacity:0;transform:translate(0,0) scale(1)}
+  15%{opacity:1}
+  50%{transform:translate(60px,-50px) scale(1.25)}
+  85%{opacity:1}
+  100%{opacity:0;transform:translate(-30px,30px) scale(0.9)}
+}
+
+5%{opacity:1}
+  80%{opacity:0.8}
+  100%{opacity:0;transform:translate(-600px,400px)}
+}
+
+5%{opacity:1}
+  90%{opacity:0.8}
+  100%{opacity:0;offset-distance:100%}
+}
+
+  5%{opacity:1}
+  90%{opacity:0.8}
+  95%{opacity:0}
+}
+
+
+
+
+
+  3%{opacity:1}
+  100%{opacity:0;transform:translate(-700px,480px) rotate(35deg)}
+}
+@keyframes starTwinkle{
+  0%,100%{opacity:0.2;transform:scale(0.8)}
+  50%{opacity:1;transform:scale(1.2)}
+}
+.star-field{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.star{position:absolute;background:#fff;border-radius:50%;animation:starTwinkle ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div class="star-field">
+  <div class="star" style="width:2px;height:2px;top:12%;left:20%;animation-duration:3.41s;animation-delay:0s;opacity:0.6"></div>
+  <div class="star" style="width:1px;height:1px;top:25%;left:65%;animation-duration:5.35s;animation-delay:0.5s;opacity:0.4"></div>
+  <div class="star" style="width:2px;height:2px;top:8%;left:80%;animation-duration:2.92s;animation-delay:1s;opacity:0.7"></div>
+  <div class="star" style="width:1px;height:1px;top:40%;left:10%;animation-duration:4.38s;animation-delay:0.3s;opacity:0.3"></div>
+  <div class="star" style="width:2px;height:2px;top:60%;left:50%;animation-duration:5.03s;animation-delay:1.5s;opacity:0.5"></div>
+  <div class="star" style="width:1px;height:1px;top:75%;left:85%;animation-duration:3.89s;animation-delay:0.8s;opacity:0.4"></div>
+  <div class="star" style="width:2px;height:2px;top:18%;left:45%;animation-duration:3.07s;animation-delay:2s;opacity:0.6"></div>
+  <div class="star" style="width:1px;height:1px;top:88%;left:30%;animation-duration:5.68s;animation-delay:0.2s;opacity:0.3"></div>
+  <div class="star" style="width:2px;height:2px;top:35%;left:90%;animation-duration:3.56s;animation-delay:1.2s;opacity:0.5"></div>
+  <div class="star" style="width:1px;height:1px;top:50%;left:25%;animation-duration:4.54s;animation-delay:0.7s;opacity:0.4"></div>
+</div>
+</div>
+<div class="aurora"><div class="aurora-blob"></div><div class="aurora-blob"></div><div class="aurora-blob"></div><div class="aurora-blob"></div></div>
+<div class="wrap">
+
+<nav>
+  <div class="nav-logo">KO<span>R</span>A</div>
+  <a href="https://t.me/Kora_china_bot" class="nav-cta" target="_blank">立即体验</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Telegram Bot · 免费使用</p>
+  <h1 class="hero-title">
+    KORA<span class="hero-dash"> — </span><span class="line2">城市探索向导</span>
+  </h1>
+  <p class="hero-sub">拒绝小红书 / 美团 / 地图软件来回翻</p>
+  <p class="hero-sub2">KORA 帮你搜罗本地一手消息</p>
+
+  <div class="meme-wrap">
+    <div class="meme">
+      <div class="meme-top">你 · 刚到上海</div>
+      <div class="meme-msg">
+        "今晚想喝酒，不要网红店"<br><br>
+        KORA：<span class="highlight">静安有家没有招牌的 bar，周四驻场，本地人才知道。</span>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="hero-btns">
+    <a href="https://t.me/Kora_china_bot" class="btn-primary" target="_blank">
+      打开 Telegram 体验 KORA
+    </a>
+    <span class="btn-hint">搜索 @Kora_china_bot · 直接对话</span>
+  </div>
+
+  <div class="scroll-ind">
+    <span>了解更多</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- FEATURES -->
+<div class="section reveal">
+  <p class="section-eyebrow">来问 KORA</p>
+  <h2 class="section-title">人生地不熟？来问！</h2>
+  <p class="section-sub">精准推荐本地好吃好玩打卡地，拒绝踩雷。</p>
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="feat-num">01</div>
+      <h3>土著必吃餐厅</h3>
+      <p>网红打卡点❌ 本地人私藏宝藏餐厅✅</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">02</div>
+      <h3>小众微醺 bar 🍸</h3>
+      <p>想要小酌一杯？3公里内必去bar超全放送 🍷</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">03</div>
+      <h3>快闪 / 市集 / 展览</h3>
+      <p>周末想逛展？KORA 掌握实时更新，永不过期。</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">04</div>
+      <h3>有问题直接问</h3>
+      <p>出行、周边、怎么去、几点去？KORA 都能答。</p>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- WHY -->
+<div class="section reveal">
+  <p class="section-eyebrow">为什么不一样</p>
+  <h2 class="section-title">拒绝 AI 瞎编<br>只做真实、本地、一手攻略</h2>
+  <p class="section-sub">这里没有过期的训练数据，只有持续更新的本地圈子。</p>
+  <div class="why-grid">
+    <div class="why-item">
+      <div class="why-bg-num">01</div><div class="why-label">真实</div>
+      <h4>零踩雷</h4>
+      <p>圈内厨师、调酒师、策展人、音乐人私推，找到就是赚到。</p>
+    </div>
+    <div class="why-item">
+      <div class="why-bg-num">02</div><div class="why-label">精准</div>
+      <h4>精准推荐</h4>
+      <p>必去榜 + 评分 + 理由，锁定你的目的地。</p>
+    </div>
+    <div class="why-item">
+      <div class="why-bg-num">03</div><div class="why-label">实时</div>
+      <h4>过期数据❌ 持续更新✅</h4>
+      <p>帮你探索 cool kids 必去小众时尚打卡地，拒绝跟风过气网红店。</p>
+    </div>
+    <div class="why-item">
+      <div class="why-bg-num">04</div><div class="why-label">直接</div>
+      <h4>直问直答</h4>
+      <p>你的秒回本地好朋友，5秒给你答案。</p>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- HOW -->
+<div class="section reveal">
+  <p class="section-eyebrow">怎么用</p>
+  <h2 class="section-title">三步，30 秒开始</h2>
+  
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>下载 Telegram</h4>
+        <p>App Store / Google Play 搜索 Telegram，免费下载。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>搜索 @Kora_china_bot</h4>
+        <p>在 Telegram 搜索栏输入，找到 KORA，点击开始对话。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>开始聊天</h4>
+        <p>"今晚上海哪里喝酒好？""北京这周末有什么展？"——就这么简单。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- FAQ -->
+<div class="section reveal">
+  <p class="section-eyebrow">FAQ</p>
+  <h2 class="section-title">常见问题</h2>
+  <div class="faq">
+    <div class="faq-item">
+      <div class="faq-q">KORA 免费吗？<span class="arrow">+</span></div>
+      <div class="faq-a">目前完全免费，下载 Telegram 直接使用。</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">支持哪些城市？<span class="arrow">+</span></div>
+      <div class="faq-a">中国任意城市，随便问！</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">可以用中文问吗？<span class="arrow">+</span></div>
+      <div class="faq-a">可以，KORA 支持中英文对话，用你习惯的语言提问即可。</div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL CTA -->
+<div class="final reveal">
+  <h2>今晚去哪<br>问 KORA</h2>
+  
+  <a href="https://t.me/Kora_china_bot" class="btn-primary" target="_blank">
+    立即体验
+  </a>
+</div>
+
+</div>
+
+<script>
+// PARTICLE BACKGROUND
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function Particle(){
+  this.x = Math.random()*W;
+  this.y = Math.random()*H;
+  this.vx = (Math.random()-0.5)*0.3;
+  this.vy = (Math.random()-0.5)*0.3;
+  this.r = Math.random()*1.8+0.3;
+  this.baseAlpha = Math.random()*0.5+0.2;
+  this.alpha = this.baseAlpha;
+  this.twinkleSpeed = Math.random()*0.09+0.04;
+  this.twinkleOffset = Math.random()*Math.PI*2;
+  const r = Math.random();
+  this.color = r>0.7 ? '#ff6b35' : r>0.5 ? '#ff3366' : r>0.3 ? '#00e5ff' : r>0.15 ? '#00ff88' : '#ffffff';
+}
+
+for(let i=0;i<120;i++) particles.push(new Particle());
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // glow blobs
+  const g1 = ctx.createRadialGradient(W*0.7,H*0.3,0,W*0.7,H*0.3,W*0.4);
+  g1.addColorStop(0,'rgba(120,50,255,0.07)');
+  g1.addColorStop(1,'transparent');
+  ctx.fillStyle = g1;
+  ctx.fillRect(0,0,W,H);
+
+  const g2 = ctx.createRadialGradient(W*0.2,H*0.6,0,W*0.2,H*0.6,W*0.35);
+  g2.addColorStop(0,'rgba(180,50,255,0.05)');
+  g2.addColorStop(1,'transparent');
+  ctx.fillStyle = g2;
+  ctx.fillRect(0,0,W,H);
+
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+    p.twinkleOffset+=p.twinkleSpeed;
+    p.alpha = p.baseAlpha + Math.sin(p.twinkleOffset)*p.baseAlpha*1.4;
+    p.alpha = Math.max(0.02, Math.min(1, p.alpha));
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // connections
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<100){
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle='rgba(255,107,53,'+(0.06*(1-d/100))+')';
+        ctx.lineWidth=0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+
+// REVEAL ON SCROLL
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting) e.target.classList.add('visible');
+  });
+},{threshold:0.15});
+reveals.forEach(r=>obs.observe(r));
+
+// FAQ TOGGLE
+document.querySelectorAll('.faq-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    item.classList.toggle('open');
+  });
+});
+</script>
+</body>
+</html>
